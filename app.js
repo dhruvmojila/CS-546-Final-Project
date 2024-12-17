@@ -6,6 +6,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import fileUpload from "express-fileupload";
 import session from "express-session";
+import xssMiddleware from "./utils/middlewares/xssMiddlewares.js";
 
 import configRoutesFunction from "./routes/index.js";
 import {
@@ -15,12 +16,12 @@ import {
 } from "./utils/middlewares/authMiddlewares.js";
 
 const rewriteUnsupportedBrowserMethods = (req, res, next) => {
-    if (req.body && req.body._method) {
-      req.method = req.body._method;
-      delete req.body._method;
-    }
-    next();
-  };
+	if (req?.body?._method) {
+		req.method = req.body._method;
+		delete req.body._method;
+	}
+	next();
+};
 
 dotenv.config();
 
@@ -54,6 +55,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use("/public", express.static("public"));
+app.use(xssMiddleware);
 
 app.engine(
   "handlebars",

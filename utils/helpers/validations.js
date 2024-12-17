@@ -1,4 +1,5 @@
 import { ObjectId } from 'mongodb';
+import nlp from 'compromise';
 
 const questionTypes = [
 	{ name: 'Text', type: 'text' },
@@ -6,6 +7,186 @@ const questionTypes = [
 	{ name: 'Single Select', type: 'single_select' },
 	{ name: 'Multi Select', type: 'multi_select' },
 ];
+
+const stopWords = [
+	'ourselves',
+	'hers',
+	'between',
+	'yourself',
+	'but',
+	'again',
+	'there',
+	'about',
+	'once',
+	'during',
+	'out',
+	'very',
+	'having',
+	'with',
+	'they',
+	'own',
+	'an',
+	'be',
+	'some',
+	'for',
+	'do',
+	'its',
+	'yours',
+	'such',
+	'into',
+	'of',
+	'most',
+	'itself',
+	'other',
+	'off',
+	'is',
+	's',
+	'am',
+	'or',
+	'who',
+	'as',
+	'from',
+	'him',
+	'each',
+	'the',
+	'themselves',
+	'until',
+	'below',
+	'are',
+	'we',
+	'these',
+	'your',
+	'his',
+	'through',
+	'don',
+	'nor',
+	'me',
+	'were',
+	'her',
+	'more',
+	'himself',
+	'this',
+	'down',
+	'should',
+	'our',
+	'their',
+	'while',
+	'above',
+	'both',
+	'up',
+	'to',
+	'ours',
+	'had',
+	'she',
+	'all',
+	'no',
+	'when',
+	'at',
+	'any',
+	'before',
+	'them',
+	'same',
+	'and',
+	'been',
+	'have',
+	'in',
+	'will',
+	'on',
+	'does',
+	'yourselves',
+	'then',
+	'that',
+	'because',
+	'what',
+	'over',
+	'why',
+	'so',
+	'can',
+	'did',
+	'not',
+	'now',
+	'under',
+	'he',
+	'you',
+	'herself',
+	'has',
+	'just',
+	'where',
+	'too',
+	'only',
+	'myself',
+	'which',
+	'those',
+	'i',
+	'after',
+	'few',
+	'whom',
+	't',
+	'being',
+	'if',
+	'theirs',
+	'my',
+	'against',
+	'a',
+	'by',
+	'doing',
+	'it',
+	'how',
+	'further',
+	'was',
+	'here',
+	'than',
+	'try',
+	'would',
+	'could',
+	'like',
+	'really',
+	'actually',
+	'probably',
+	'think',
+	'maybe',
+	'sure',
+	'many',
+	'much',
+	'seem',
+	'quite',
+	'just',
+	'anyway',
+];
+
+const processPhrase = (phrase) => {
+	return phrase
+		.toLowerCase()
+		.replace(/[.,!?;:]/g, '')
+		.trim();
+};
+
+const splitPhrases = (phrase) => {
+	return phrase.includes(' and ')
+		? phrase.split(' and ').map((p) => p.trim())
+		: [phrase];
+};
+const filterPhrases = (phrases, stopWords) => {
+	return phrases.filter(
+		(phrase) => !stopWords.includes(phrase) && phrase.length > 1
+	);
+};
+
+const updateKeywordCounts = (phrases, keywordCounts) => {
+	phrases.forEach((phrase) => {
+		keywordCounts[phrase] = (keywordCounts[phrase] || 0) + 1;
+	});
+};
+
+const processAnswers = (answers, stopWords, keywordCounts) => {
+	answers.forEach((response) => {
+		const doc = nlp(response);
+		let phrases = doc.nouns().out('array');
+		phrases = phrases.map(processPhrase).flatMap(splitPhrases);
+		phrases = filterPhrases(phrases, stopWords);
+		updateKeywordCounts(phrases, keywordCounts);
+	});
+};
 
 const isValidBoolean = (bool, paramName = 'Parameter') => {
 	if (typeof bool !== 'boolean') {
@@ -124,4 +305,10 @@ const validationMethods = {
 
 const saltRounds = 16;
 
-export { validationMethods, saltRounds, questionTypes };
+export {
+	validationMethods,
+	saltRounds,
+	questionTypes,
+	stopWords,
+	processAnswers,
+};

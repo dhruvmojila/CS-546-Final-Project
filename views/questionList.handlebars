@@ -1,48 +1,45 @@
-{{!-- {{#if message}}
-    <div id='popupNotification' class='popup'>
-        <p>{{message}}</p>
-        <button id='closePopup'>Close</button>
+{{#if hasErrors}}
+    <div id="server_error_div">
+        <ul class="error">
+            {{#each errors}}
+                <li>{{this}}</li>
+            {{/each}}
+        </ul>
     </div>
-{{/if}} --}}
+{{/if}}
+<div id="error_div" hidden>
+    <ul id="error_list" class="error"></ul>
+</div>
 <table class='table'>
-	<thead>
-		<tr>
-			<th>Question</th>
-			<th>Category</th>
-			<th>Type</th>
-			{{! <th>Question use count</th> }}
-			<th>
-				<div class='add'>
-					<a
-						href='/questions/create-question'
-						class='button'
-					>Create</a>
-				</div>
-			</th>
-		</tr>
-	</thead>
-	<tbody>
-		{{#each questions}}
-			<tr>
-				<td>{{this.questionText}}</td>
-				<td>{{this.categoryName}}</td>
-				<td>{{this.type}}</td>
-				{{!-- <td>{{this.useCount}}</td> --}}
-				<td>
-					<form
-						action='/questions/question/{{this.questionId}}'
-						method='POST'
-					>
-						<a
-							href='/questions/question/edit/{{this.questionId}}'
-							class='button'
-						>Edit</a>
-						<input type='hidden' name='_method' value='DELETE'>
-						<button type='submit' class='button'>Delete</button>
-					</form>
-				</td>
-			</tr>
+    <thead>
+        <tr>
+            <th>Question</th>
+            <th>Category</th>
+            <th>Type</th>
+            {{! <th>Question use count</th> }}
+            <th>
+                <div class='add'>
+                    <a href='/questions/create-question' class='button'>Create</a>
+                </div>
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#each questions}}
+            <tr>
+                <td>{{this.questionText}}</td>
+                <td>{{this.categoryName}}</td>
+                <td>{{this.type}}</td>
+                {{!-- <td>{{this.useCount}}</td> --}}
+                <td>
+                    <form action='/questions/question/{{this.questionId}}' method='POST'>
+                        <a href='/questions/question/edit/{{this.questionId}}' class='button'>Edit</a>
+                        <input type='hidden' name='_method' value='DELETE'>
+                        <button type='submit' class='button'>Delete</button>
+                    </form>
+                </td>
+            </tr>
 
-		{{/each}}
-	</tbody>
+        {{/each}}
+    </tbody>
 </table>

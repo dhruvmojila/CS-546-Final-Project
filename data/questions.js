@@ -64,11 +64,29 @@ const addQuestionToCategory = async (categoryName, questionData) => {
 		type,
 		'Question type'
 	);
-	questionData.scale = validationMethods.isValidScale(scale, 'Rating scale');
-	questionData.options = validationMethods.isValidArrayOfStrings(
-		options,
-		'Options'
-	);
+	switch (questionData.type) {
+		case 'rating':
+			questionData.scale = validationMethods.isValidScale(
+				scale,
+				'Rating scale'
+			);
+			break;
+		case 'single_select':
+		case 'multi_select':
+			questionData.options = [
+				...new Set(
+					validationMethods.isValidArrayOfStrings(options, 'Options')
+				),
+			];
+			if (questionData.options.length < 2) {
+				throw new Error(
+					'Question options should have at least 2 unique options'
+				);
+			}
+			break;
+		default:
+			break;
+	}
 	const questionsCollection = await questions();
 	let category = await questionsCollection.findOne({ categoryName });
 	if (!category) {

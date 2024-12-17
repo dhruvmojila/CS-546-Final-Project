@@ -7,7 +7,7 @@
     <div>
       <p>Survey Name: {{this.surveyDetailsData.surveyName}}
         <span>
-          <a target="_blank" href="/dashboard/surveystats/{{this.surveyDetailsData._id}}/{{../curUser._id}}">
+          <a href="/dashboard/surveystats/{{this.surveyDetailsData._id}}/{{../curUser._id}}">
             Survey Stats
           </a>
         </span>
@@ -21,7 +21,6 @@
             {{this.firstName}}
             {{this.lastName}}
             <a
-            target="_blank"
               href="/dashboard/fillSurvey/{{../this.surveyDetailsData._id}}/{{this._id}}"
             >fill now</a>
           </li>
@@ -36,7 +35,6 @@
             {{this.firstName}}
             {{this.lastName}}
             <a
-            target="_blank"
               href="/dashboard/filledSurveyPreview/{{../this.surveyDetailsData._id}}/{{this._id}}"
             >View Survey</a>
           </li>
@@ -52,7 +50,7 @@
     <div>
        <h3>Survey Name: {{this.surveyDetailsData.surveyName}}
         <span>
-          <a target="_blank" href="/dashboard/surveystats/{{this.surveyDetailsData._id}}/{{../curUser._id}}">
+          <a href="/dashboard/surveystats/{{this.surveyDetailsData._id}}/{{../curUser._id}}">
             Survey Stats
           </a>
         </span>
@@ -77,7 +75,6 @@
             {{this.firstName}}
             {{this.lastName}}
             <a
-            target="_blank"
               href="/dashboard/filledSurveyPreview/{{../this.surveyDetailsData._id}}/{{this._id}}"
             >View Survey</a>
           </li>

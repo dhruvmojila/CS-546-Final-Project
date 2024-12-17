@@ -14,16 +14,16 @@ router.use(isAdminLoggedIn);
 router.get('/', async (req, res, next) => {
 	try {
 		const questions = await questionsDataFunctions.getAllQuestions();
-		res.render('questionList', {
+		return res.render('questionList', {
 			title: 'Question List',
 			questions,
 		});
-	} catch (e) {
+	} catch (error) {
 		return res.status(500).render('error', {
 			title: 'Error',
-			message: e.message,
-			link: '/dasboard',
-			linkName: 'Dasboard',
+			message: error.message,
+			link: '/questions',
+			linkName: 'Questions tab',
 		});
 	}
 });
@@ -32,16 +32,16 @@ router
 	.route('/create-question')
 	.get(async (req, res) => {
 		try {
-			res.render('selectQuestionType', {
+			return res.render('selectQuestionType', {
 				title: 'Select Question Type',
 				questionTypes: questionTypes,
 			});
-		} catch (e) {
+		} catch (error) {
 			return res.status(500).render('error', {
 				title: 'Error',
-				message: e.message,
-				link: '/dasboard',
-				linkName: 'Dasboard',
+				message: error.message,
+				link: '/questions',
+				linkName: 'Questions tab',
 			});
 		}
 	})
@@ -76,26 +76,31 @@ router
 		}
 		try {
 			const categories = await questionsDataFunctions.getAllCategories();
-			res.render('createQuestion', {
+			return res.render('createQuestion', {
 				title: 'Create Question',
 				question,
 				categories,
 			});
-		} catch (e) {
+		} catch (error) {
 			return res.status(500).render('error', {
 				title: 'Error',
-				message: e.message,
-				link: '/dasboard',
-				linkName: 'Dasboard',
+				message: error.message,
+				link: '/questions',
+				linkName: 'Questions tab',
 			});
 		}
 	});
 
 router.route('/create-question/:id').post(async (req, res, next) => {
-	// Todo: Error handling for question data
 	const { id } = req.params;
-	const { type, questionText, options, scale, category, newCategory } =
-		req.body;
+	const {
+		type,
+		questionText,
+		options: reqOptions,
+		scale,
+		category,
+		newCategory,
+	} = req.body;
 	const questionData = {
 		useCount: 0,
 	};
@@ -115,10 +120,22 @@ router.route('/create-question/:id').post(async (req, res, next) => {
 		switch (type) {
 			case 'single_select':
 			case 'multi_select':
-				questionData.options = validationMethods.isValidArrayOfStrings(
-					options,
-					'Options'
-				);
+				const options = Array.isArray(reqOptions)
+					? reqOptions
+					: reqOptions?.split(',');
+				questionData.options = [
+					...new Set(
+						validationMethods.isValidArrayOfStrings(
+							options,
+							'Options'
+						)
+					),
+				];
+				if (questionData.options.length < 2) {
+					throw new Error(
+						'Question options should have at least 2 unique options'
+					);
+				}
 				break;
 			case 'rating':
 				questionData.scale = validationMethods.isValidScale(
@@ -132,9 +149,9 @@ router.route('/create-question/:id').post(async (req, res, next) => {
 	} catch (error) {
 		return res.status(500).render('error', {
 			title: 'Error',
-			message: e.message,
-			link: '/dasboard',
-			linkName: 'Dasboard',
+			message: error.message,
+			link: '/questions',
+			linkName: 'Questions tab',
 		});
 	}
 
@@ -153,9 +170,14 @@ router.route('/create-question/:id').post(async (req, res, next) => {
 			selectedCategory,
 			questionData
 		);
-		res.redirect('/questions');
-	} catch (err) {
-		next(createHttpError.InternalServerError(err.message));
+		return res.redirect('/questions');
+	} catch (error) {
+		return res.status(500).render('error', {
+			title: 'Error',
+			message: error.message,
+			link: '/questions',
+			linkName: 'Questions tab',
+		});
 	}
 });
 
@@ -167,8 +189,8 @@ router.route('/question/:id').delete(async (req, res) => {
 			return res.status(400).render('error', {
 				title: 'Error',
 				message: 'Question ID is required',
-				link: '/dasboard',
-				linkName: 'Dasboard',
+				link: '/questions',
+				linkName: 'Questions tab',
 			});
 		}
 		const surveys = await surveyDataFunctions.getAllSurveys();
@@ -182,18 +204,18 @@ router.route('/question/:id').delete(async (req, res) => {
 				title: 'Error',
 				message:
 					'This question is currently being used in a survey and cannot be deleted!',
-				link: '/dasboard',
-				linkName: 'Dasboard',
+				link: '/questions',
+				linkName: 'Questions tab',
 			});
 		}
 		await questionsDataFunctions.deleteQuestion(id);
-		res.redirect('/questions');
+		return res.redirect('/questions');
 	} catch (error) {
 		return res.status(500).render('error', {
 			title: 'Error',
 			message: error.message,
-			link: '/dasboard',
-			linkName: 'Dasboard',
+			link: '/questions',
+			linkName: 'Questions tab',
 		});
 	}
 });
@@ -205,28 +227,36 @@ router
 			const { id: paramID } = req.params;
 			const id = validationMethods.isValidString(paramID, 'Question ID');
 			if (!id) {
-				return res
-					.status(400)
-					.render('error', { message: 'Question ID is required' });
+				return res.status(400).render('error', {
+					title: 'Error',
+					message: 'Question ID is required',
+					link: '/questions',
+					linkName: 'Questions tab',
+				});
 			}
 			const question = await questionsDataFunctions.getQuestionById(id);
 			if (!question) {
-				return res
-					.status(404)
-					.render('error', { message: 'Question not found' });
+				return res.status(404).render('error', {
+					title: 'Error',
+					message: 'Question not found',
+					link: '/questions',
+					linkName: 'Questions tab',
+				});
 			}
 			const categories = await questionsDataFunctions.getAllCategories();
-			res.render('editQuestion', {
+			return res.render('editQuestion', {
 				title: 'Edit Question',
 				currCategory: question.categoryName,
 				question,
 				categories,
 			});
 		} catch (error) {
-			console.error(error);
-			return res
-				.status(500)
-				.render('error', { message: 'Internal Server Error' });
+			return res.status(500).render('error', {
+				title: 'Error',
+				message: error.message,
+				link: '/questions',
+				linkName: 'Questions tab',
+			});
 		}
 	})
 	.post(async (req, res, next) => {
@@ -268,9 +298,12 @@ router
 			switch (type) {
 				case 'single_select':
 				case 'multi_select':
+					const options = Array.isArray(questionData.options)
+						? questionData.options
+						: questionData.options?.split(',');
 					updatedQuestion.options =
 						validationMethods.isValidArrayOfStrings(
-							questionData.options,
+							options,
 							'Options'
 						);
 					break;
@@ -301,8 +334,13 @@ router
 				);
 			}
 			res.redirect('/questions');
-		} catch (e) {
-			next(createHttpError.InternalServerError(e.message));
+		} catch (error) {
+			return res.status(500).render('error', {
+				title: 'Error',
+				message: error.message,
+				link: '/questions',
+				linkName: 'Questions tab',
+			});
 		}
 	});
 
@@ -313,16 +351,16 @@ router
 		try {
 			// Get question according to survey id
 			const questions = await questionsDataFunctions.getAllQuestions();
-			res.render('testSurvey', {
+			return res.render('testSurvey', {
 				title: 'Survey',
 				questions,
 			});
-		} catch (e) {
+		} catch (error) {
 			return res.status(500).render('error', {
 				title: 'Error',
-				message: e.message,
-				link: '/dasboard',
-				linkName: 'Dasboard',
+				message: error.message,
+				link: '/questions',
+				linkName: 'Questions tab',
 			});
 		}
 	})
